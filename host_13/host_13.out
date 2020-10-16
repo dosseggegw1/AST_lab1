@@ -1,0 +1,18 @@
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-16 09:29 BST
+Initiating Parallel DNS resolution of 1 host. at 09:29
+Completed Parallel DNS resolution of 1 host. at 09:29, 0.00s elapsed
+Initiating SYN Stealth Scan at 09:29
+Scanning 10.10.40.13 [65536 ports]
+Discovered open port 80/tcp on 10.10.40.13
+SYN Stealth Scan Timing: About 18.11% done; ETC: 09:32 (0:02:20 remaining)
+SYN Stealth Scan Timing: About 44.57% done; ETC: 09:31 (0:01:16 remaining)
+Completed SYN Stealth Scan at 09:31, 110.20s elapsed (65536 total ports)
+Nmap scan report for 10.10.40.13
+Host is up (0.015s latency).
+Not shown: 65535 filtered ports
+PORT   STATE SERVICE
+80/tcp open  http
+
+Read data files from: /usr/bin/../share/nmap
+Nmap done: 1 IP address (1 host up) scanned in 110.31 seconds
+           Raw packets sent: 131153 (5.771MB) | Rcvd: 83 (3.652KB)

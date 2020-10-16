@@ -1,0 +1,10 @@
+Starting Nmap 7.80 ( https://nmap.org ) at 2020-10-16 09:55 BST
+Nmap scan report for 10.10.40.128
+Host is up (0.026s latency).
+Not shown: 65534 closed ports
+PORT   STATE    SERVICE VERSION
+0/tcp  filtered unknown
+80/tcp open     http    Apache httpd 2.2.11 ((Ubuntu) PHP/5.2.6-3ubuntu4 with Suhosin-Patch)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 25.31 seconds
