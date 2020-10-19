@@ -455,7 +455,9 @@ On obtient donc les informations sur la connexion ssh d'un utilisation : `guest:
 
 Dans le répertoire `/home/ast20/note_service/share`, on retrouve le binaire `chall` qui est l'application qui tourne sur le port `60001`. 
 
+Pour récupérer le fichier binaire, nous utilisons la commande : 
 
+`scp guest@10.10.40.231:~/t/r/home/ast20/note_service/share/chall .`
 
 Etape manquante : reverse le fichier `chall`
 
