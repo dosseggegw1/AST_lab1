@@ -400,6 +400,74 @@ vim /etc/hosts
 
 
 
+recherche des urls existants avec metasploit
+
+http://theevilbit.blogspot.com/2013/11/metasploitable-walkthrough.html
+
+````
+Requested URL:
+http://server/does-not-exist
+HTTP response:
+HTTP/1.1 404 Not Found
+Requested URL:
+http://server/WEB-INF
+HTTP response:
+HTTP/1.1 302 Found
+Location: http://server/WEB-INF/
+Requested URL:
+http://server/WEB-INF/
+HTTP response:
+HTTP/1.1 404 Not Found https://hackdefense.com/publications/cve-2015-5345-apache-tomcat-vulnerability/
+````
+
+https://nullarmor.github.io/posts/jerry
+
+
+
+Scan des dossiers selon les plus connu
+
+````
+dirb http://www.corporation-sa.com
+---- Scanning URL: http://www.corporation-sa.com/ ----
++ http://www.corporation-sa.com/css (CODE:302|SIZE:0) 
++ http://www.corporation-sa.com/fonts (CODE:302|SIZE:0)   
++ http://www.corporation-sa.com/img (CODE:302|SIZE:0)
++ http://www.corporation-sa.com/js (CODE:302|SIZE:0)
+````
+
+
+
+https://medium.com/@arkanoidctf/hackthebox-writeup-jerry-aa2b992917a7
+
+
+
+
+
+``````shell
+root@kali:/media/sf_AST/AST_lab1# nikto -h 10.10.40.168 -p 80
+- Nikto v2.1.6
+---------------------------------------------------------------------------
++ Target IP:          10.10.40.168
++ Target Hostname:    10.10.40.168
++ Target Port:        80
++ Start Time:         2020-10-19 21:31:56 (GMT1)
+---------------------------------------------------------------------------
++ Server: Apache-Coyote/1.1
++ The anti-clickjacking X-Frame-Options header is not present.
++ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
++ The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type
++ Root page / redirects to: http://www.corporation-sa.com/
++ No CGI Directories found (use '-C all' to force check all possible dirs)
++ Allowed HTTP Methods: GET, HEAD, POST, PUT, DELETE, OPTIONS 
++ OSVDB-397: HTTP method ('Allow' Header): 'PUT' method could allow clients to save files on the web server.
++ OSVDB-5646: HTTP method ('Allow' Header): 'DELETE' may allow clients to remove files on the web server.
++ 7889 requests: 0 error(s) and 6 item(s) reported on remote host
++ End Time:           2020-10-19 21:34:56 (GMT1) (180 seconds)
+---------------------------------------------------------------------------
++ 1 host(s) tested
+
+``````
+
 
 
 
